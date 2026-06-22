@@ -1,0 +1,6 @@
+{
+  "name": "TrustPulse Index",
+  "description": "A global, crowd-sourced consumer trust ledger and digital safety directory for online shoppers, freelance clients, and social media profiles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
