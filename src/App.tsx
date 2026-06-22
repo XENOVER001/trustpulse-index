@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
   Shield,
@@ -38,6 +38,16 @@ interface DisputeEntry {
 }
 
 export default function App() {
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const scrollToResults = () => {
+    setTimeout(() => {
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+  };
+
   // Global search input and current search term
   const [searchInput, setSearchInput] = useState("");
   const [activeSearchTerm, setActiveSearchTerm] = useState("");
@@ -142,6 +152,7 @@ export default function App() {
         setIsWhitelistedEntity(true);
         setMatchedEntries([]);
         setSearchLoading(false);
+        scrollToResults();
         return;
       }
 
@@ -156,6 +167,7 @@ export default function App() {
 
       setMatchedEntries(matches);
       setSearchLoading(false);
+      scrollToResults();
     }, 3000);
   };
 
@@ -505,6 +517,31 @@ export default function App() {
                 </form>
               </div>
 
+              {/* Dynamic sleek scroll down notifier custom banner */}
+              {hasSearched && !searchLoading && (
+                <div 
+                  onClick={scrollToResults}
+                  className="bg-indigo-50 border border-indigo-150 rounded-2xl p-4 flex items-center justify-between text-xs text-indigo-950 shadow-md max-w-4xl cursor-pointer hover:bg-indigo-100/80 hover:border-indigo-300 active:scale-[0.99] transition-all group"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </div>
+                    <div>
+                      <span className="font-extrabold font-mono tracking-wider uppercase text-indigo-800">SYSTEM AUDIT COMPLETE</span>
+                      <p className="text-zinc-600 mt-0.5 font-medium">
+                        System audit records for <strong className="text-indigo-900 font-extrabold">"{activeSearchTerm}"</strong> are ready. Click here or scroll down to view.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 font-black text-[10px] uppercase font-mono tracking-wider rounded-xl shadow-sm group-hover:translate-y-0.5 transition-transform animate-bounce">
+                    <span>Scroll Down</span>
+                    <span className="text-xs">👇</span>
+                  </div>
+                </div>
+              )}
+
               {/* ACTIVE AUDITING LOADER */}
               {searchLoading && (
                 <div className="bg-white p-6 sm:p-8 rounded-2xl border-2 border-zinc-200 shadow-md max-w-4xl space-y-6 animate-pulse">
@@ -549,7 +586,7 @@ export default function App() {
 
               {/* DUAL-PATH LOGICAL RESULT ROUTER */}
               {hasSearched && !searchLoading && (
-                <div className="space-y-6 max-w-4xl animate-fade-in">
+                <div ref={resultsRef} className="space-y-6 max-w-4xl animate-fade-in pt-4 border-t border-zinc-100">
                   
                   {/* CASE A: Verified Whitelisted Corporate Public entity */}
                   {isWhitelistedEntity && (
