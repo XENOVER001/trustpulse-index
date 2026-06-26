@@ -48,6 +48,7 @@ interface DisputeEntry {
   frictionScore: number;
   reportText: string;
   timestamp: string;
+  logType?: "good" | "bad";
 }
 
 interface DeterministicAccount {
@@ -188,6 +189,7 @@ export default function App() {
   // Dispute Form state
   const [formHandle, setFormHandle] = useState("");
   const [formPlatform, setFormPlatform] = useState("");
+  const [formLogType, setFormLogType] = useState<"good" | "bad">("bad");
   const [formFrictionScore, setFormFrictionScore] = useState(3);
   const [formReportText, setFormReportText] = useState("");
   const [formTermsAccepted, setFormTermsAccepted] = useState(false);
@@ -222,6 +224,7 @@ export default function App() {
             platform: data.platform,
             frictionScore: Number(data.frictionScore) || 3,
             reportText: data.reportText || "",
+            logType: data.logType || (Number(data.frictionScore) === 1 ? "good" : "bad"),
             timestamp: data.timestamp || "",
             timestampOrder: data.timestampOrder || 0
           });
@@ -359,6 +362,7 @@ export default function App() {
       platform,
       frictionScore: formFrictionScore,
       reportText: text,
+      logType: formLogType,
       timestamp: new Date().toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -381,6 +385,7 @@ export default function App() {
           platform: newLog.platform,
           frictionScore: newLog.frictionScore,
           reportText: newLog.reportText,
+          logType: newLog.logType || "bad",
           timestamp: newLog.timestamp,
           timestampOrder: new Date().getTime()
         });
@@ -393,10 +398,12 @@ export default function App() {
     setFormHandle("");
     setFormPlatform("");
     setFormReportText("");
+    setFormLogType("bad");
     setFormFrictionScore(3);
     setFormTermsAccepted(false);
 
-    setFormSuccessMessage(`Dispute filed successfully on the Global Cloud Ledger (0 KSh Cost)! Searching "${handle}" will now pull up this incident log for anyone in the world.`);
+    const typeLabel = formLogType === "good" ? "Positive rating" : "Dispute";
+    setFormSuccessMessage(`${typeLabel} filed successfully on the Global Cloud Ledger (0 KSh Cost)! Searching "${handle}" will now pull up this incident log for anyone in the world.`);
     setSearchInput(handle);
     handleSearchTrigger(undefined, handle);
   };
@@ -744,79 +751,200 @@ export default function App() {
                   </div>
                 )}
 
-                {/* CASE B: Local Organic Disputes (Matches filed in localStorage) */}
-                {!isWhitelistedEntity && matchedEntries.length > 0 && (
-                  <div className="bg-rose-50 dark:bg-[#2c1318] border border-rose-500/75 p-6 sm:p-8 rounded-2xl shadow-md text-rose-950 dark:text-rose-50 space-y-6">
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
-                      <div className="p-3 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-2xl border border-rose-200 dark:border-rose-800/80 shrink-0">
-                        <AlertTriangle className="w-6 h-6 animate-pulse" />
-                      </div>
-                      <div className="space-y-1.5 flex-1 min-w-0">
-                        <div className="bg-red-600 text-white rounded-xl px-3 py-1.5 font-extrabold flex flex-wrap items-center gap-2 w-fit max-w-full text-[10px] sm:text-xs tracking-wider uppercase font-mono">
-                          <AlertTriangle className="w-4 h-4 shrink-0" />
-                          <span>Verified Scam Account Warning</span>
+                {/* CASE B: Local Organic Disputes (Matches filed in localStorage / Firestore) */}
+                {!isWhitelistedEntity && matchedEntries.length > 0 && (() => {
+                  const goodCount = matchedEntries.filter(e => e.logType === "good" || (!e.logType && e.frictionScore === 1)).length;
+                  const badCount = matchedEntries.filter(e => e.logType === "bad" || (!e.logType && e.frictionScore > 1)).length;
+
+                  let overallStatus: "green" | "yellow" | "orange" | "red" = "red";
+                  let statusText = "";
+                  let descriptionText = "";
+
+                  if (goodCount > 0 && badCount === 0) {
+                    overallStatus = "green";
+                    statusText = "COMMUNITY APPROVED SAFE";
+                    descriptionText = `The handle "${activeSearchTerm}" is logged as completely good and trustworthy by ${goodCount} user(s). No friction reported.`;
+                  } else if (badCount > 0 && goodCount === 0) {
+                    const maxFriction = Math.max(...matchedEntries.filter(e => e.logType !== "good").map(e => e.frictionScore), 1);
+                    if (maxFriction === 1) {
+                      overallStatus = "yellow";
+                      statusText = "UNVERIFIED SAFETY STATUS";
+                      descriptionText = `Low transaction friction has been logged by ${badCount} user(s). Profile is not fully verified yet.`;
+                    } else if (maxFriction === 2) {
+                      overallStatus = "orange";
+                      statusText = "SUSPICIOUS PROFILE ALERT";
+                      descriptionText = `Moderate friction reports logged by ${badCount} user(s). Warnings indicate potential risk or delays.`;
+                    } else {
+                      overallStatus = "red";
+                      statusText = "VERIFIED SCAM WARNING - HIGH RISK";
+                      descriptionText = `Critical risk warnings: High friction and transaction dispute reports logged by ${badCount} user(s).`;
+                    }
+                  } else if (goodCount > 0 && badCount > 0) {
+                    const smaller = Math.min(goodCount, badCount);
+                    const difference = Math.abs(goodCount - badCount);
+                    const pctDiff = (difference / smaller) * 100;
+
+                    if (goodCount > badCount) {
+                      if (pctDiff > 20) {
+                        overallStatus = "green";
+                        statusText = pctDiff >= 40 ? "COMMUNITY CERTIFIED SECURE" : "COMMUNITY APPROVED SAFE";
+                        descriptionText = `The community rating is overwhelmingly positive (${goodCount} Good vs ${badCount} Bad). Since the positive difference margin is ${pctDiff.toFixed(0)}% (> 20% threshold), the profile displays as safe.`;
+                      } else {
+                        overallStatus = "yellow";
+                        statusText = "MIXED RATINGS - UNVERIFIED SAFETY";
+                        descriptionText = `Contested ratings detected (${goodCount} Good vs ${badCount} Bad). The margin is only ${pctDiff.toFixed(0)}% (<= 20%), hence safety remains unverified.`;
+                      }
+                    } else {
+                      const maxFriction = Math.max(...matchedEntries.filter(e => e.logType === "bad" || (!e.logType && e.frictionScore > 1)).map(e => e.frictionScore), 1);
+                      if (maxFriction === 1) {
+                        overallStatus = "yellow";
+                        statusText = "MIXED RATINGS - MINOR FRICTION";
+                        descriptionText = `Mixed feedback with negative reviews leading (${badCount} Bad vs ${goodCount} Good). Minor delays or low-level friction reported.`;
+                      } else if (maxFriction === 2) {
+                        overallStatus = "orange";
+                        statusText = "MIXED RATINGS - SUSPICIOUS PROFILE";
+                        descriptionText = `Mixed ratings with negative reviews leading (${badCount} Bad vs ${goodCount} Good). Moderate friction score 2 reported.`;
+                      } else {
+                        overallStatus = "red";
+                        statusText = "MIXED RATINGS - HIGH RISK WARNING";
+                        descriptionText = `Mixed ratings with negative reviews leading (${badCount} Bad vs ${goodCount} Good). Critical scam/friction score of 3 reported.`;
+                      }
+                    }
+                  }
+
+                  // Determine styling properties
+                  let cardBg = "bg-rose-50 dark:bg-[#2c1318] border-rose-500/75 text-rose-950 dark:text-rose-50";
+                  let iconBg = "bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800/80";
+                  let badgeBg = "bg-red-600";
+                  let iconEl = <AlertTriangle className="w-6 h-6 animate-pulse" />;
+                  let badgeIcon = <AlertTriangle className="w-4 h-4 shrink-0" />;
+
+                  if (overallStatus === "green") {
+                    cardBg = "bg-emerald-50 dark:bg-[#0f2c19] border-emerald-500/75 text-emerald-950 dark:text-emerald-50";
+                    iconBg = "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/80";
+                    badgeBg = "bg-emerald-600";
+                    iconEl = <ShieldCheck className="w-6 h-6" />;
+                    badgeIcon = <ShieldCheck className="w-4 h-4 shrink-0" />;
+                  } else if (overallStatus === "yellow") {
+                    cardBg = "bg-amber-50 dark:bg-[#2d2510] border-amber-500/75 text-amber-950 dark:text-amber-50";
+                    iconBg = "bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/80";
+                    badgeBg = "bg-amber-500 text-black";
+                    iconEl = <Info className="w-6 h-6 text-amber-500" />;
+                    badgeIcon = <Info className="w-4 h-4 shrink-0" />;
+                  } else if (overallStatus === "orange") {
+                    cardBg = "bg-orange-50 dark:bg-[#341d0f] border-orange-500/75 text-orange-950 dark:text-orange-50";
+                    iconBg = "bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800/80";
+                    badgeBg = "bg-orange-600";
+                    iconEl = <AlertTriangle className="w-6 h-6 text-orange-500" />;
+                    badgeIcon = <AlertTriangle className="w-4 h-4 shrink-0" />;
+                  }
+
+                  return (
+                    <div className={`${cardBg} border p-6 sm:p-8 rounded-2xl shadow-md space-y-6`}>
+                      <div className="flex flex-col sm:flex-row items-start gap-4">
+                        <div className={`${iconBg} p-3 rounded-2xl border shrink-0`}>
+                          {iconEl}
                         </div>
-                        <h4 className="text-lg font-extrabold tracking-tight">
-                          Active Incident Dispute Records Detected on Profile
-                        </h4>
-                        <p className="text-xs text-rose-900 dark:text-rose-300 leading-relaxed font-medium">
-                          Friction and transaction reports match the handle <strong className="font-mono text-rose-950 dark:text-rose-100">"{activeSearchTerm}"</strong>. This is a bad record.
-                        </p>
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className={`${badgeBg} text-white rounded-xl px-3 py-1.5 font-extrabold flex flex-wrap items-center gap-2 w-fit max-w-full text-[10px] sm:text-xs tracking-wider uppercase font-mono`}>
+                            {badgeIcon}
+                            <span>{statusText}</span>
+                          </div>
+                          <h4 className="text-lg font-extrabold tracking-tight">
+                            Interactive Public Ledger Analysis
+                          </h4>
+                          <p className="text-xs leading-relaxed font-medium">
+                            {descriptionText}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Ratings stats grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div className="bg-white/40 dark:bg-zinc-900/40 p-3 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col justify-center">
+                          <span className="text-[9px] uppercase font-mono text-zinc-500 font-semibold">Good Ratings</span>
+                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">👍 {goodCount} user{goodCount !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="bg-white/40 dark:bg-zinc-900/40 p-3 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col justify-center">
+                          <span className="text-[9px] uppercase font-mono text-zinc-500 font-semibold">Bad Ratings</span>
+                          <span className="text-sm font-bold text-rose-600 dark:text-rose-400 mt-0.5">👎 {badCount} user{badCount !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="bg-white/40 dark:bg-zinc-900/40 col-span-2 sm:col-span-1 p-3 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col justify-center">
+                          <span className="text-[9px] uppercase font-mono text-zinc-500 font-semibold">Margin Status</span>
+                          <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mt-0.5 font-mono">
+                            {goodCount > 0 && badCount > 0 ? (
+                              `${Math.abs(goodCount - badCount)} diff (${((Math.abs(goodCount - badCount) / Math.min(goodCount, badCount)) * 100).toFixed(0)}%)`
+                            ) : (
+                              "Uncontested"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white/80 dark:bg-zinc-950/60 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 flex flex-col justify-between">
+                          <p className="text-[10px] uppercase font-mono text-zinc-600 dark:text-zinc-450 font-semibold">Database Context</p>
+                          <div className="grid grid-cols-2 gap-3 mt-3 text-zinc-900 dark:text-zinc-200">
+                            <div>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium">Registry Log ID</span>
+                              <span className="text-xs font-mono font-bold">{matchedEntries[0].id}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium">Active Claims</span>
+                              <span className="text-xs font-bold">{matchedEntries.length} Disputes</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium">Friction Rating</span>
+                              <span className={`text-xs font-mono font-bold ${overallStatus === 'green' ? 'text-emerald-600' : overallStatus === 'yellow' ? 'text-amber-500' : overallStatus === 'orange' ? 'text-orange-500' : 'text-rose-600'}`}>
+                                {matchedEntries[0].frictionScore}/3
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] text-zinc-500 dark:text-zinc-400 block font-medium">Platform Context</span>
+                              <span className="text-xs font-bold">{matchedEntries[0].platform}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-zinc-950/60 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50">
+                          <p className="text-[10px] uppercase font-mono text-zinc-400 mb-2">Transaction Friction timeline</p>
+                          <div className="h-32">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={getChartData(overallStatus === "green", matchedEntries.length * 6)} margin={{ left: -30 }}>
+                                <XAxis dataKey="name" stroke="#a1a1aa" fontSize={8} />
+                                <YAxis stroke="#a1a1aa" fontSize={8} />
+                                <Tooltip />
+                                <Bar dataKey={overallStatus === "green" ? "trust" : "friction"} fill={overallStatus === "green" ? "#10b981" : overallStatus === "yellow" ? "#f59e0b" : overallStatus === "orange" ? "#ea580c" : "#ef4444"} radius={[3, 3, 0, 0]} name={overallStatus === "green" ? "Safety Rating" : "Incident Friction"} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h5 className="text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-400">Chronological Dispute Logs:</h5>
+                        {matchedEntries.map((log) => {
+                          const isLogGood = log.logType === "good" || (!log.logType && log.frictionScore === 1);
+                          return (
+                            <div key={log.id} className="bg-white/95 dark:bg-zinc-950/90 p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 space-y-1.5 text-zinc-800 dark:text-zinc-200">
+                              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pb-1.5 border-b border-zinc-100 dark:border-zinc-900">
+                                <span className="flex items-center gap-1.5">
+                                  <span>ID: {log.id}</span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${isLogGood ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"}`}>
+                                    {isLogGood ? "👍 Good" : "👎 Bad"}
+                                  </span>
+                                  <span className="font-bold opacity-75">Friction: {log.frictionScore}/3</span>
+                                </span>
+                                <span>{log.timestamp}</span>
+                              </div>
+                              <p className="text-xs leading-relaxed font-semibold">{log.reportText}</p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white/80 dark:bg-zinc-950/60 p-4 rounded-xl border border-rose-200/50 dark:border-rose-900/50 flex flex-col justify-between">
-                        <p className="text-[10px] uppercase font-mono text-zinc-600 dark:text-zinc-400 font-semibold">Database Context</p>
-                        <div className="grid grid-cols-2 gap-3 mt-3 text-zinc-900 dark:text-zinc-200">
-                          <div>
-                            <span className="text-[9px] text-zinc-500 dark:text-zinc-450 block font-medium">Registry Log ID</span>
-                            <span className="text-xs font-mono font-bold">{matchedEntries[0].id}</span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-zinc-500 dark:text-zinc-450 block font-medium">Active Claims</span>
-                            <span className="text-xs font-bold text-rose-600">{matchedEntries.length} Disputes</span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-zinc-500 dark:text-zinc-450 block font-medium">Friction Rating</span>
-                            <span className="text-xs font-mono font-bold text-rose-600">{matchedEntries[0].frictionScore}/5</span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-zinc-500 dark:text-zinc-450 block font-medium">Platform Context</span>
-                            <span className="text-xs font-bold">{matchedEntries[0].platform}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white/80 dark:bg-zinc-950/60 p-4 rounded-xl border border-rose-200/50 dark:border-rose-900/50">
-                        <p className="text-[10px] uppercase font-mono text-zinc-400 mb-2">Transaction Friction timeline</p>
-                        <div className="h-32">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={getChartData(false, matchedEntries.length * 6)} margin={{ left: -30 }}>
-                              <XAxis dataKey="name" stroke="#a1a1aa" fontSize={8} />
-                              <YAxis stroke="#a1a1aa" fontSize={8} />
-                              <Tooltip />
-                              <Bar dataKey="friction" fill="#ef4444" radius={[3, 3, 0, 0]} name="Incident Warnings" />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h5 className="text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-400">Chronological Dispute Logs:</h5>
-                      {matchedEntries.map((log) => (
-                        <div key={log.id} className="bg-white/90 dark:bg-zinc-950/80 p-4 rounded-xl border border-rose-200/50 dark:border-rose-900/50 space-y-1.5 text-zinc-800 dark:text-zinc-200">
-                          <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pb-1.5 border-b border-zinc-100 dark:border-zinc-900">
-                            <span>ID: {log.id}</span>
-                            <span>{log.timestamp}</span>
-                          </div>
-                          <p className="text-xs leading-relaxed font-semibold">{log.reportText}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* CASE C: Deterministic Catalog of 20,000+ Records */}
                 {!isWhitelistedEntity && matchedEntries.length === 0 && searchedAccountDetail && (
@@ -1316,28 +1444,66 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-[11px] uppercase font-bold tracking-wider text-zinc-500">
-                    <span>Transaction Friction Level:</span>
-                    <span className="text-blue-600 dark:text-blue-400 font-mono">{formFrictionScore}/5</span>
-                  </div>
-                  <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1">
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      step="1"
-                      value={formFrictionScore}
-                      onChange={(e) => setFormFrictionScore(parseInt(e.target.value))}
-                      className="w-full accent-blue-600 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[9px] text-zinc-450 font-mono">
-                      <span>1: Minimal friction</span>
-                      <span>3: Timeline delays / pressure</span>
-                      <span>5: Scam / Direct redirection</span>
-                    </div>
+                <div className="space-y-1">
+                  <label className="block text-[11px] uppercase font-bold tracking-wider text-zinc-500">
+                    Log Rating Category:
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormLogType("good");
+                        setFormFrictionScore(1);
+                      }}
+                      className={`py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 border transition-all duration-200 cursor-pointer ${
+                        formLogType === "good"
+                          ? "bg-emerald-600/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-extrabold"
+                          : "bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <span>👍 Log Positive (Good)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormLogType("bad");
+                        if (formFrictionScore === 1) setFormFrictionScore(3);
+                      }}
+                      className={`py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 border transition-all duration-200 cursor-pointer ${
+                        formLogType === "bad"
+                          ? "bg-rose-600/10 border-rose-500 text-rose-600 dark:text-rose-400 font-extrabold"
+                          : "bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      }`}
+                    >
+                      <span>👎 Log Friction (Bad)</span>
+                    </button>
                   </div>
                 </div>
+
+                {formLogType === "bad" && (
+                  <div className="space-y-2 animate-fade-in">
+                    <div className="flex justify-between items-center text-[11px] uppercase font-bold tracking-wider text-zinc-500">
+                      <span>Transaction Friction Level:</span>
+                      <span className="text-blue-600 dark:text-blue-400 font-mono font-bold">Level {formFrictionScore}/3</span>
+                    </div>
+                    <div className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2">
+                      <input
+                        type="range"
+                        min="1"
+                        max="3"
+                        step="1"
+                        value={formFrictionScore}
+                        onChange={(e) => setFormFrictionScore(parseInt(e.target.value))}
+                        className="w-full accent-blue-600 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[9px] text-zinc-450 font-mono">
+                        <span className="text-amber-500 font-semibold">1: Minor (Yellow, not fully verified)</span>
+                        <span className="text-orange-500 font-semibold">2: Moderate (Orange, potential risk)</span>
+                        <span className="text-rose-500 font-semibold">3: Severe (Red, critical warning)</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <label className="block text-[11px] uppercase font-bold tracking-wider text-zinc-500">
