@@ -590,16 +590,9 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500 pt-1 gap-2">
-                  <span className="flex items-center space-x-1.5 flex-wrap">
+                  <span className="flex items-center space-x-1">
                     <Database className="w-3 h-3 text-blue-500" />
                     <span>Indexing 1,000,000+ trusted profiles and 300,000+ warning records.</span>
-                    <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] px-2 py-0.5 rounded-full font-bold">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                      </span>
-                      Firestore Live (0 KSh Database)
-                    </span>
                   </span>
                   <div className="flex flex-wrap items-center gap-1.5 font-bold text-zinc-500 dark:text-zinc-400">
                     <span>Try:</span>
