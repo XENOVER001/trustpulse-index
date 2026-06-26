@@ -22,6 +22,7 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig);
 
 // Use the custom firestoreDatabaseId if provided, else fallback to standard
-export const db = config?.firestoreDatabaseId 
-  ? getFirestore(app, config.firestoreDatabaseId)
+const customDbId = (config as any)?.firestoreDatabaseId;
+export const db = customDbId 
+  ? getFirestore(app, customDbId)
   : getFirestore(app);
