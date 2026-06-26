@@ -35,7 +35,7 @@ import {
 } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
 import { checkIsWhitelisted } from "./data/whitelist";
-import { collection, getDocs, addDoc, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import { db } from "./lib/firebase";
 
 // =========================================================================
@@ -209,12 +209,12 @@ export default function App() {
       console.error(e);
     }
 
-    const loadGlobalDisputes = async () => {
-      try {
-        const q = query(collection(db, "disputes"), orderBy("timestampOrder", "desc"));
-        const querySnapshot = await getDocs(q);
-        const fetched: DisputeEntry[] = [];
-        querySnapshot.forEach((doc) => {
+    // Subscribe to real-time updates from Firestore to synchronize all devices instantly
+    const unsubscribe = onSnapshot(
+      collection(db, "disputes"),
+      (snapshot) => {
+        const fetched: (DisputeEntry & { timestampOrder?: number })[] = [];
+        snapshot.forEach((doc) => {
           const data = doc.data();
           fetched.push({
             id: data.id || doc.id,
@@ -222,19 +222,25 @@ export default function App() {
             platform: data.platform,
             frictionScore: Number(data.frictionScore) || 3,
             reportText: data.reportText || "",
-            timestamp: data.timestamp || ""
+            timestamp: data.timestamp || "",
+            timestampOrder: data.timestampOrder || 0
           });
         });
+
+        // Robust client-side sorting (avoids any missing field/index edge-cases)
+        fetched.sort((a, b) => (b.timestampOrder || 0) - (a.timestampOrder || 0));
+
         if (fetched.length > 0) {
           setLocalRegistry(fetched);
           localStorage.setItem("trustpulse_local_entries", JSON.stringify(fetched));
         }
-      } catch (err) {
-        console.error("Error fetching global disputes from Firestore, falling back to local:", err);
+      },
+      (err) => {
+        console.error("Firestore real-time subscription error:", err);
       }
-    };
+    );
 
-    loadGlobalDisputes();
+    return () => unsubscribe();
   }, []);
 
   // Cooldown counter
