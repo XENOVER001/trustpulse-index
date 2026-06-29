@@ -65,11 +65,21 @@ export function AnalyticsPanel({
       </div>
 
       {/* CALCULATED BAR CHART TIMELINE */}
-      <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2">
+      <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2 relative flex flex-col justify-center">
         <span className="text-xs font-bold text-zinc-700 dark:text-zinc-350 uppercase font-mono block">
           {statusText} — 6-Month Calculated Trend
         </span>
-        <div className="h-44">
+        <div className="h-44 relative">
+          {totalGood === 0 && totalBad === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-zinc-50/50 dark:bg-zinc-950/20 rounded-xl backdrop-blur-[1px] text-center space-y-1 z-10">
+              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">
+                No local data trends calculated yet
+              </span>
+              <p className="text-[10px] text-zinc-400 max-w-xs leading-normal">
+                Ratings will render dynamically once positive logs or warnings are submitted for this handle.
+              </p>
+            </div>
+          ) : null}
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ left: -25 }}>
               <XAxis dataKey="name" stroke="#a1a1aa" fontSize={8} />

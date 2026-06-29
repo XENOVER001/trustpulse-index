@@ -4,6 +4,13 @@ import { Shield, AlertTriangle, CheckCircle, Info, Sparkles, HelpCircle, ArrowRi
 interface LegitimacyInspectorProps {
   theme: "light" | "dark";
   prefilledHandle?: string;
+  onRedirectToDispute?: (data: {
+    handle: string;
+    platform: string;
+    logType: "good" | "bad";
+    frictionScore: number;
+    reportText: string;
+  }) => void;
 }
 
 // -------------------------------------------------------------
@@ -142,7 +149,7 @@ export function analyzeHandlePattern(handle: string): AuditResult {
   };
 }
 
-export default function LegitimacyInspector({ theme, prefilledHandle }: LegitimacyInspectorProps) {
+export default function LegitimacyInspector({ theme, prefilledHandle, onRedirectToDispute }: LegitimacyInspectorProps) {
   const [handle, setHandle] = useState(prefilledHandle || "");
   const [checkedQuestions, setCheckedQuestions] = useState<Record<string, boolean>>({
     unsolicited: false,
@@ -496,6 +503,45 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Report Account Action Button */}
+              {onRedirectToDispute && (
+                <div className="border-t border-zinc-200/50 dark:border-zinc-800/50 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const reportLines: string[] = [];
+                      if (checkedQuestions.unsolicited) reportLines.push("- Messaged first without permission.");
+                      if (checkedQuestions.cryptoPay) reportLines.push("- Asked for non-refundable payment (crypto, gift cards, or P2P apps).");
+                      if (checkedQuestions.guarantees) reportLines.push("- Promised guaranteed profits or zero risk.");
+                      if (checkedQuestions.lowEngagement) reportLines.push("- Profile has lots of followers but no engagement.");
+                      if (checkedQuestions.recoveryFee) reportLines.push("- Claimed they can recover lost funds or hack accounts for a fee.");
+
+                      const checkedLabels = reportLines.length > 0 
+                        ? "\n" + reportLines.join("\n") 
+                        : " None checked.";
+
+                      const combinedText = `Safety scan for @${handle} on Legit Checker.
+Risk Score: ${result.score} pts (Confidence Level: ${result.confidence}%).
+Heuristic Status: ${result.rating}.
+
+Observed warning signs:${checkedLabels}`;
+
+                      onRedirectToDispute({
+                        handle: handle.trim(),
+                        platform: "Web / Social App",
+                        logType: result.rating === "likely legit" ? "good" : "bad",
+                        frictionScore: result.rating === "scam" ? 3 : result.rating === "suspicious" ? 2 : 1,
+                        reportText: combinedText,
+                      });
+                    }}
+                    className="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                  >
+                    <span>⚠️ Report Account & File Dispute</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               )}
 

@@ -695,9 +695,19 @@ export function ResultsView({
                     <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 font-black block">
                       {isSafeTheme ? "Integrity Trend Metrics (6-Month Range)" : "Friction Conflict Incident Timelines"}
                     </span>
-                    <div className={`h-48 p-2 rounded-xl border ${
+                    <div className={`h-48 p-2 rounded-xl border relative flex flex-col justify-center ${
                       theme === "dark" ? "bg-zinc-900 border-zinc-800" : "bg-white border-zinc-200"
                     }`}>
+                      {analytics.totalGood === 0 && analytics.totalBad === 0 ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-zinc-50/50 dark:bg-zinc-950/20 rounded-xl backdrop-blur-[1px] text-center space-y-1 z-10">
+                          <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">
+                            No ratings logged for this account yet
+                          </span>
+                          <p className="text-[10px] text-zinc-450 dark:text-zinc-500 max-w-xs leading-normal">
+                            Submit a positive rating or file a dispute to generate the dynamic 6-month safety analytics.
+                          </p>
+                        </div>
+                      ) : null}
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics.chartData} margin={{ left: -25, right: 10, top: 10 }}>
                           <XAxis dataKey="name" stroke={theme === "dark" ? "#71717a" : "#71717a"} fontSize={8} fontWeight="bold" />

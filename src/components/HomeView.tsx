@@ -41,7 +41,7 @@ export function HomeView({
         <p className={`text-sm leading-relaxed max-w-2xl ${
           theme === "dark" ? "text-zinc-400" : "text-zinc-600"
         }`}>
-          Enter any user handle, website, store title, or email suffix. Our decentralized registry evaluates safety indices across 1,000,000+ known safe and flagged profiles instantly.
+          Search any username, website, store, or email. We instantly check our database of over 1 million safe and flagged profiles to keep you secure.
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export function HomeView({
           <span className={`text-xs font-black uppercase tracking-wider ${
             theme === "dark" ? "text-zinc-400" : "text-zinc-600"
           }`}>
-            Search Safe Registry
+            Search Database
           </span>
         </div>
 
@@ -77,7 +77,7 @@ export function HomeView({
             <input
               type="text"
               required
-              placeholder="Search handle, email, website (e.g. apple, @mrbeast, trader_jack)"
+              placeholder="Enter username, email, or website..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className={`block w-full pl-11 pr-32 py-4 border rounded-2xl text-sm placeholder-zinc-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-mono font-bold shadow-sm ${
@@ -108,7 +108,7 @@ export function HomeView({
           <div className="flex flex-wrap items-center justify-between text-[11px] pt-1 gap-2">
             <span className="flex items-center space-x-1 text-zinc-500 font-semibold">
               <Database className="w-3.5 h-3.5 text-blue-500" />
-              <span>Indexing 1,000,000+ trusted profiles and 300,000+ warning records.</span>
+              <span>Covering 1,000,000+ trusted accounts and 300,000+ flagged records.</span>
             </span>
             <div className="flex flex-wrap items-center gap-1.5 font-black">
               <span className="text-zinc-500">Try:</span>
@@ -177,10 +177,12 @@ export function HomeView({
             theme === "dark" ? "text-zinc-50" : "text-zinc-950"
           }`}>
             <Shield className="w-5.5 h-5.5 text-blue-600" />
-            <span>TrustPulse Intermediary Safe Harbor Compliance Principles</span>
+            <span>Trust & Safety Guidelines</span>
           </h2>
-          <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider font-bold mt-1">
-            Sustaining objective Consumer Telemetry under international safe harbors
+          <p className={`text-xs font-semibold mt-1 ${
+            theme === "dark" ? "text-zinc-400" : "text-zinc-500"
+          }`}>
+            How we keep our directory fair, secure, and accurate for everyone.
           </p>
         </div>
 
@@ -190,10 +192,10 @@ export function HomeView({
               theme === "dark" ? "text-zinc-100" : "text-zinc-900"
             }`}>
               <span className="text-emerald-500 font-bold">✔</span>
-              <span>Objective, Non-Defamatory Taxonomy</span>
+              <span>Fair & Fact-Based Reviews</span>
             </h3>
             <p className={theme === "dark" ? "text-zinc-400" : "text-zinc-600"}>
-              To maintain strict compliance with civil code registries, we ban subjective defamatory labels. All indices map to quantitative, metric-based classifications: <strong>"Transaction Friction Index"</strong>, <strong>"Public Dispute File"</strong>, and <strong>"Linguistic Risk Cues"</strong>.
+              We don't allow insults or opinions. Every report is based on clear numbers, transaction history, and text patterns to keep things entirely fair.
             </p>
           </div>
 
@@ -202,10 +204,10 @@ export function HomeView({
               theme === "dark" ? "text-zinc-100" : "text-zinc-900"
             }`}>
               <span className="text-blue-500 font-bold">✔</span>
-              <span>Institutional Brand Whitelisting</span>
+              <span>Verified Official Brands</span>
             </h3>
             <p className={theme === "dark" ? "text-zinc-400" : "text-zinc-600"}>
-              To systematically mitigate malicious spam or corporate brand impersonation, globally validated institutional domains are protected from unverified user dispute filings.
+              To prevent fake accounts from pretending to be major companies, official brand domains are locked and protected from false reports.
             </p>
           </div>
 
@@ -214,10 +216,10 @@ export function HomeView({
               theme === "dark" ? "text-zinc-100" : "text-zinc-900"
             }`}>
               <span className="text-indigo-500 font-bold">✔</span>
-              <span>Intermediary Safe Harbor Immunity</span>
+              <span>User Responsibility</span>
             </h3>
             <p className={theme === "dark" ? "text-zinc-400" : "text-zinc-600"}>
-              Under global safe harbor statutes (Section 230 equivalent), TrustPulse Index operates strictly as a neutral, passive distributor of crowdfunded dispute telemetry. Posting users accept full civil responsibility for inputs.
+              TrustPulse hosts community-driven reports. Users who submit feedback are fully responsible for making sure their reports are true and honest.
             </p>
           </div>
 
@@ -226,10 +228,10 @@ export function HomeView({
               theme === "dark" ? "text-zinc-100" : "text-zinc-900"
             }`}>
               <span className="text-amber-500 font-bold">✔</span>
-              <span>Bandwidth Rate-Limiting</span>
+              <span>Spam Protection</span>
             </h3>
             <p className={theme === "dark" ? "text-zinc-400" : "text-zinc-600"}>
-              To prevent denial of service and secure server-side linguistic scan queries, client-side rate limit lockouts are systematic across interactive evaluation portals.
+              To keep the platform fast and stop spam attacks, we limit how many rapid searches or reports a single user can make.
             </p>
           </div>
         </div>
