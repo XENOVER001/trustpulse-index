@@ -19,7 +19,8 @@ import {
   MessageSquare,
   Building,
   ChevronLeft,
-  BarChart2
+  BarChart2,
+  ShieldAlert
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -42,6 +43,7 @@ import { DisputeForm } from "./components/DisputeForm";
 import { AnalyticsPanel } from "./components/AnalyticsPanel";
 import { HomeView } from "./components/HomeView";
 import { ResultsView } from "./components/ResultsView";
+import LegitimacyInspector from "./components/LegitimacyInspector";
 
 // =========================================================================
 // TYPES & INTERFACES
@@ -112,46 +114,7 @@ function getDeterministicAccount(handle: string): DeterministicAccount | null {
     };
   }
 
-  let hash = 0;
-  for (let i = 0; i < normalized.length; i++) {
-    hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  hash = Math.abs(hash);
-
-  const isLegit = hash % 2 === 0;
-  const platformList = ["Telegram Shop", "Discord Community", "Instagram Store", "Upwork Seller", "Twitter Merchant", "eBay Trader"];
-  const platform = platformList[hash % platformList.length];
-
-  const reportCount = isLegit ? 0 : (hash % 45) + 3;
-  const trustScore = isLegit ? 94 + (hash % 6) : 8 + (hash % 18);
-  const frictionScore = isLegit ? 1 : 4 + (hash % 2 === 0 ? 0 : 1);
-
-  const legitReports = [
-    "Verified registration signatures match authentic business records.",
-    "Fast, responsive communications. Favorable delivery history verified.",
-    "0 friction or risk flags detected in historical public indexes."
-  ];
-
-  const scamReports = [
-    "Active warnings: high-pressure sales and fake scarcity tactics reported.",
-    "Direct payment redirection outside standard platforms requested.",
-    "Transaction discrepancies reported by several community members."
-  ];
-
-  const selectedReports = isLegit 
-    ? [legitReports[hash % legitReports.length]] 
-    : [scamReports[hash % scamReports.length]];
-
-  return {
-    handle: `@${normalized}`,
-    isLegit,
-    platform,
-    reportCount,
-    trustScore,
-    frictionScore,
-    reports: selectedReports,
-    id: `IDX-${100000 + (hash % 900000)}`
-  };
+  return null;
 }
 
 // Mock static database timeline for overview metrics
@@ -167,9 +130,10 @@ const timelineData = [
 export default function App() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [showAdsNotice, setShowAdsNotice] = useState(true);
-  const [activeTab, setActiveTab] = useState<"search" | "dashboard" | "submit" | "guidelines">("search");
+  const [activeTab, setActiveTab] = useState<"search" | "dashboard" | "submit" | "guidelines" | "inspector">("search");
   const [currentView, setCurrentView] = useState<"home" | "results" | "dispute">("home");
   const [showLocalAnalytics, setShowLocalAnalytics] = useState(false);
+  const [inspectorPrefilledHandle, setInspectorPrefilledHandle] = useState("");
 
   // Search Engine state
   const [searchInput, setSearchInput] = useState("");
@@ -205,8 +169,6 @@ export default function App() {
   // Load persistence cache & fetch from global free Firestore ledger
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("trustpulse_local_entries");
-      if (saved) setLocalRegistry(JSON.parse(saved));
       const savedTheme = localStorage.getItem("trustpulse_theme") as "light" | "dark" | null;
       if (savedTheme) {
         setTheme(savedTheme);
@@ -217,39 +179,9 @@ export default function App() {
       console.error(e);
     }
 
-    // Subscribe to real-time updates from Firestore to synchronize all devices instantly
-    const unsubscribe = onSnapshot(
-      collection(db, "disputes"),
-      (snapshot) => {
-        const fetched: (DisputeEntry & { timestampOrder?: number })[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          fetched.push({
-            id: data.id || doc.id,
-            handle: data.handle,
-            platform: data.platform,
-            frictionScore: Number(data.frictionScore) || 3,
-            reportText: data.reportText || "",
-            logType: data.logType || (Number(data.frictionScore) === 1 ? "good" : "bad"),
-            timestamp: data.timestamp || "",
-            timestampOrder: data.timestampOrder || 0
-          });
-        });
-
-        // Robust client-side sorting (avoids any missing field/index edge-cases)
-        fetched.sort((a, b) => (b.timestampOrder || 0) - (a.timestampOrder || 0));
-
-        if (fetched.length > 0) {
-          setLocalRegistry(fetched);
-          localStorage.setItem("trustpulse_local_entries", JSON.stringify(fetched));
-        }
-      },
-      (err) => {
-        console.error("Firestore real-time subscription error:", err);
-      }
-    );
-
-    return () => unsubscribe();
+    // Force completely empty local registry state
+    setLocalRegistry([]);
+    localStorage.removeItem("trustpulse_local_entries");
   }, []);
 
   // Synchronize body styles with the current active theme mode dynamically for 100% legibility
@@ -595,9 +527,9 @@ export default function App() {
     }
   };
 
-  // 1,000,000+ Verified Legit & Scam entries + dynamics representing high-capacity decentralized registers
-  const totalVerifiedLegitCount = 1248510 + localRegistry.filter(l => l.frictionScore <= 2).length;
-  const totalVerifiedScamCount = 384152 + localRegistry.filter(l => l.frictionScore > 2).length;
+  // Strictly session/dynamic entries representing high-capacity decentralized registers (starting at 0)
+  const totalVerifiedLegitCount = localRegistry.filter(l => l.logType === "good").length;
+  const totalVerifiedScamCount = localRegistry.filter(l => l.logType === "bad").length;
   const totalOrganicDisputes = localRegistry.length;
 
   return (
@@ -687,6 +619,7 @@ export default function App() {
         <div className="flex overflow-x-auto pb-1 gap-1.5 border-b border-zinc-200 dark:border-zinc-800 scrollbar-none">
           {[
             { id: "search", label: "🔍 Audit Registry", icon: Search },
+            { id: "inspector", label: "🕵️ Legitimacy Inspector", icon: ShieldAlert },
             { id: "dashboard", label: "📊 Analytics & Trends", icon: TrendingUp },
             { id: "submit", label: "✍️ Log Dispute", icon: PlusCircle },
             { id: "guidelines", label: "🛡️ Compliance Principles", icon: Shield }
@@ -739,6 +672,10 @@ export default function App() {
               onBack={() => {
                 setCurrentView("home");
                 setHasSearched(false);
+              }}
+              onInspectHandle={(handleToInspect) => {
+                setInspectorPrefilledHandle(handleToInspect);
+                setActiveTab("inspector");
               }}
             />
           ) : (
@@ -974,6 +911,14 @@ export default function App() {
           }`}>
             <CompliancePrinciples />
           </div>
+        )}
+
+        {/* TAB 5: LEGITIMACY DYNAMIC INSPECTOR */}
+        {activeTab === "inspector" && (
+          <LegitimacyInspector
+            theme={theme}
+            prefilledHandle={inspectorPrefilledHandle}
+          />
         )}
 
       </main>

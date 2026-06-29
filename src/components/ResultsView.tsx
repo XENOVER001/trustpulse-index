@@ -75,6 +75,7 @@ interface ResultsViewProps {
     scoreValue: string;
   };
   onBack: () => void;
+  onInspectHandle?: (handle: string) => void;
 }
 
 export function ResultsView({
@@ -95,7 +96,8 @@ export function ResultsView({
   showLocalAnalytics,
   setShowLocalAnalytics,
   getCalculatedAnalytics,
-  onBack
+  onBack,
+  onInspectHandle
 }: ResultsViewProps) {
   return (
     <div className="space-y-8 animate-fade-in">
@@ -500,24 +502,46 @@ export function ResultsView({
         {/* CASE D: Zero Match Fallback */}
         {!isWhitelistedEntity && matchedEntries.length === 0 && !searchedAccountDetail && (
           <div className="space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="bg-zinc-500/15 border border-zinc-500/35 text-zinc-600 dark:text-zinc-400 rounded-xl px-3 py-1 font-extrabold flex items-center gap-1.5 text-[10px] sm:text-xs tracking-wider uppercase font-mono shadow-sm">
+                  <AlertTriangle className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>NOT YET VERIFIED (NEITHER GOOD NOR BAD)</span>
+                </div>
+              </div>
+
               <h2 className={`text-2xl sm:text-3xl font-black tracking-tight leading-tight ${
                 theme === "dark" ? "text-zinc-50" : "text-zinc-950"
               }`}>
-                No Safety Directory Matches Located
+                Safety Status: Unverified
               </h2>
-              <p className={`text-sm leading-relaxed ${
+              
+              <p className={`text-sm leading-relaxed desc-text ${
                 theme === "dark" ? "text-zinc-300" : "text-zinc-700"
               }`}>
-                The queried handle or storefront is not found inside our whitelists or reported registers. You can run our advanced linguistic risk scanner to evaluate communication urgency cues.
+                The queried account, domain, or handle <strong className="font-mono text-zinc-900 dark:text-zinc-100">"{activeSearchTerm}"</strong> is not indexed in our verified database. The safety status is currently unverified, meaning there are neither positive trust records nor reported active disputes for this handle. TrustPulse Index only registers and displays results on accounts we have verified or flagged.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-2">
+              {onInspectHandle && (
+                <button
+                  type="button"
+                  onClick={() => onInspectHandle(activeSearchTerm)}
+                  className="px-4.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-lg flex items-center space-x-1.5 transition-all cursor-pointer"
+                >
+                  <span>🕵️ Use Legitimacy Inspector for "{activeSearchTerm}"</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setShowAIFallback(!showAIFallback)}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md flex items-center space-x-1.5 transition-colors cursor-pointer"
+                className={`px-4 py-2.5 font-bold text-xs rounded-xl shadow-md flex items-center space-x-1.5 transition-colors cursor-pointer ${
+                  theme === "dark"
+                    ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+                    : "bg-zinc-100 hover:bg-zinc-250 text-zinc-850"
+                }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{showAIFallback ? "Hide AI Diagnostics" : "Scan Communication Risks"}</span>
