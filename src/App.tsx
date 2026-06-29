@@ -607,27 +607,47 @@ export default function App() {
       
       {/* GLOBAL NAVIGATION HEADER */}
       <header className="sticky top-0 z-50 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("search")}>
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/10">
-              <Shield className="w-5 h-5" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("search")}>
+              <img 
+                src="/src/assets/images/trust_pulse_logo_1782477625037.jpg" 
+                alt="TrustPulse Logo" 
+                className="w-9 h-9 rounded-xl object-cover shadow-sm border border-zinc-200 dark:border-zinc-800"
+                referrerPolicy="no-referrer"
+              />
+              <div>
+                <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-zinc-50 flex items-baseline">
+                  TrustPulse<span className="text-blue-600 font-bold">Index</span>
+                </span>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono tracking-widest uppercase font-bold mt-0.5">Verified Safety Directory</p>
+              </div>
             </div>
-            <div>
-              <span className="font-extrabold text-lg tracking-tight text-zinc-900 dark:text-zinc-50 flex items-baseline">
-                TrustPulse<span className="text-blue-600 font-bold">Index</span>
-              </span>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono tracking-widest uppercase font-bold mt-0.5">Verified Safety Directory</p>
+
+            {/* Theme Switcher Toggle below the logo on the left */}
+            <div className="flex items-center">
+              <button
+                onClick={toggleTheme}
+                className="px-2 py-1 rounded-lg border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer shadow-sm flex items-center space-x-1.5 text-[10px] font-extrabold"
+                title="Toggle theme mode"
+              >
+                {theme === "light" ? (
+                  <>
+                    <Moon className="w-3 h-3 text-blue-500" />
+                    <span>Toggle Dark Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun className="w-3 h-3 text-amber-500" />
+                    <span>Toggle Light Mode</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
-            <button
-              onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer shadow-sm"
-              title="Toggle theme mode"
-            >
-              {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+            {/* Left aligned switcher */}
           </div>
         </div>
       </header>

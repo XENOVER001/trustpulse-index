@@ -47,13 +47,8 @@ export function HomeView({
 
       {/* Search Box Area */}
       <div className="space-y-4">
-        {/* Log Dispute Toggler JUST ABOVE search icon on search registry box */}
+        {/* Log Dispute Toggler JUST ABOVE search icon on search registry box, positioned on the left */}
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-black uppercase tracking-wider ${
-            theme === "dark" ? "text-zinc-400" : "text-zinc-600"
-          }`}>
-            Search Safe Registry
-          </span>
           <button
             type="button"
             onClick={onOpenDispute}
@@ -66,6 +61,11 @@ export function HomeView({
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Log Dispute</span>
           </button>
+          <span className={`text-xs font-black uppercase tracking-wider ${
+            theme === "dark" ? "text-zinc-400" : "text-zinc-600"
+          }`}>
+            Search Safe Registry
+          </span>
         </div>
 
         {/* Search Form (Free / Borderless style) */}

@@ -305,7 +305,7 @@ export function ResultsView({
                   Interactive Crowdsourced Ledger Analysis
                 </h2>
                 
-                <p className={`text-sm leading-relaxed ${
+                <p className={`text-sm leading-relaxed desc-text ${
                   theme === "dark" ? "text-zinc-300" : "text-zinc-700"
                 }`}>
                   {descriptionText}
@@ -315,22 +315,22 @@ export function ResultsView({
               {/* Ratings Grid (Free layout, no heavy boxes) */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2 text-xs font-semibold">
                 <div>
-                  <span className="text-[10px] text-zinc-500 block font-black uppercase">Good Ratings</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base">👍 {goodCount} User{goodCount !== 1 ? 's' : ''}</span>
+                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Good Ratings</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-base counter-val">👍 {goodCount} User{goodCount !== 1 ? 's' : ''}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-zinc-500 block font-black uppercase">Bad Ratings</span>
-                  <span className="text-rose-600 dark:text-rose-400 font-extrabold text-base">👎 {badCount} User{badCount !== 1 ? 's' : ''}</span>
+                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Bad Ratings</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-extrabold text-base counter-val">👎 {badCount} User{badCount !== 1 ? 's' : ''}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-zinc-500 block font-black uppercase">Max Friction Score</span>
-                  <span className={`font-extrabold text-base ${textAccentColor}`}>
+                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Max Friction Score</span>
+                  <span className={`font-extrabold text-base score-val ${textAccentColor}`}>
                     {matchedEntries[0]?.frictionScore || 3}/3
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-zinc-500 block font-black uppercase">Total Active claims</span>
-                  <span className="text-zinc-800 dark:text-zinc-100 font-extrabold text-base">{matchedEntries.length} Disputes</span>
+                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Total Active claims</span>
+                  <span className="text-zinc-800 dark:text-zinc-100 font-extrabold text-base counter-val">{matchedEntries.length} Disputes</span>
                 </div>
               </div>
 
@@ -358,7 +358,7 @@ export function ResultsView({
                           </span>
                           <span>{log.timestamp}</span>
                         </div>
-                        <p className={`text-sm leading-relaxed font-semibold ${
+                        <p className={`text-sm leading-relaxed font-semibold review-text ${
                           theme === "dark" ? "text-zinc-200" : "text-zinc-800"
                         }`}>{log.reportText}</p>
                       </div>
