@@ -35,7 +35,7 @@ import {
   CartesianGrid
 } from "recharts";
 import { motion, AnimatePresence } from "motion/react";
-import { checkIsWhitelisted } from "./data/whitelist";
+import { checkIsWhitelisted, getHeuristicAccount } from "./data/whitelist";
 import { collection, addDoc, onSnapshot } from "firebase/firestore";
 import { db } from "./lib/firebase";
 import { CompliancePrinciples } from "./components/CompliancePrinciples";
@@ -111,6 +111,16 @@ function getDeterministicAccount(handle: string): DeterministicAccount | null {
       id: `IDX-JUMPTASK-CLONE-${normalized.toUpperCase().replace(/[^A-Z]/g, "")}`,
       isJumpTaskClone: true,
       cloneWarning: "This is a fraudulent lookalike. The real JumpTask platform is hosted ONLY at jumptask.io."
+    };
+  }
+
+  // Call our comprehensive heuristic lookalike threat database engine
+  const heuristicMatch = getHeuristicAccount(handle);
+  if (heuristicMatch) {
+    return {
+      ...heuristicMatch,
+      isJumpTask: false,
+      isJumpTaskClone: false
     };
   }
 
