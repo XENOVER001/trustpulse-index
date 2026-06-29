@@ -146,6 +146,7 @@ export default function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchProgressMessage, setSearchProgressMessage] = useState("");
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // Storage
   const [localRegistry, setLocalRegistry] = useState<DisputeEntry[]>([]);
@@ -209,6 +210,26 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [cooldownTime]);
+
+  useEffect(() => {
+    let interval: any;
+    if (searchLoading) {
+      setLoadingProgress(0);
+      const startTime = Date.now();
+      const duration = 3000;
+      
+      interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const percentage = Math.min(Math.round((elapsed / duration) * 100), 99);
+        setLoadingProgress(percentage);
+      }, 50);
+    } else {
+      setLoadingProgress(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [searchLoading]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "light" ? "dark" : "light";
@@ -659,7 +680,66 @@ export default function App() {
 
         {/* TAB 1: TRUST REGISTRY AUDITING SEARCH */}
         {activeTab === "search" && (
-          currentView === "home" ? (
+          searchLoading ? (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className={`p-8 sm:p-12 rounded-3xl border shadow-xl flex flex-col items-center justify-center text-center space-y-8 ${
+                theme === "dark" ? "bg-zinc-900/80 border-zinc-800/80" : "bg-white border-zinc-100"
+              }`}
+            >
+              {/* Pulsing Outer Radar Circle with Rotating Scan */}
+              <div className="relative flex items-center justify-center w-24 h-24">
+                {/* Outer scanning halo */}
+                <div className="absolute inset-0 rounded-full border-2 border-dashed border-blue-500/30 animate-spin" style={{ animationDuration: "12s" }} />
+                {/* Mid pulse ring */}
+                <div className="absolute inset-2 rounded-full bg-blue-500/5 animate-ping" style={{ animationDuration: "3s" }} />
+                {/* Core animated circular ring */}
+                <div className="absolute inset-3 rounded-full border-4 border-blue-500/20 border-t-blue-600 animate-spin" style={{ animationDuration: "1.2s" }} />
+                {/* Inner Shield icon */}
+                <div className="absolute inset-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-blue-500 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Text & Phase Indicator */}
+              <div className="space-y-3 max-w-md">
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Real-time Safety Scan</span>
+                </div>
+                <h3 className={`text-xl font-extrabold tracking-tight ${theme === "dark" ? "text-zinc-50" : "text-zinc-950"}`}>
+                  Analyzing Account Signature
+                </h3>
+                <p className={`text-xs leading-relaxed font-semibold h-8 flex items-center justify-center ${theme === "dark" ? "text-zinc-400" : "text-zinc-500"}`}>
+                  {searchProgressMessage}
+                </p>
+              </div>
+
+              {/* Dynamic Progress Bar & Percent Indicator */}
+              <div className="w-full max-w-xs space-y-2">
+                <div className="flex justify-between items-center text-[10px] font-mono font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                  <span>Ledger Security Index</span>
+                  <span className="text-blue-500">{loadingProgress}%</span>
+                </div>
+                {/* Safe outer track */}
+                <div className="w-full h-2.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-full overflow-hidden p-0.5 border border-zinc-200/50 dark:border-zinc-700/30">
+                  {/* Dynamic filled line */}
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-75 ease-out"
+                    style={{ width: `${loadingProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Informative Security Fact Subtitle */}
+              <div className="pt-2 text-[10px] text-zinc-400 dark:text-zinc-500 max-w-sm flex items-center justify-center space-x-1.5 font-semibold">
+                <Database className="w-3.5 h-3.5" />
+                <span>Auditing against 1M+ trusted and 300k+ threat records...</span>
+              </div>
+            </motion.div>
+          ) : currentView === "home" ? (
             <HomeView
               theme={theme}
               searchInput={searchInput}
