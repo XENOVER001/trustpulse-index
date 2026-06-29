@@ -611,7 +611,7 @@ export default function App() {
           <div className="flex flex-col space-y-2">
             <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("search")}>
               <img 
-                src="/src/assets/images/trust_pulse_logo_1782477625037.jpg" 
+                src="/trust_pulse_logo.jpg" 
                 alt="TrustPulse Logo" 
                 className="w-9 h-9 rounded-xl object-cover shadow-sm border border-zinc-200 dark:border-zinc-800"
                 referrerPolicy="no-referrer"
