@@ -530,7 +530,7 @@ export function ResultsView({
                   onClick={() => onInspectHandle(activeSearchTerm)}
                   className="px-4.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-lg flex items-center space-x-1.5 transition-all cursor-pointer"
                 >
-                  <span>🕵️ Use Legitimacy Inspector for "{activeSearchTerm}"</span>
+                  <span>🕵️ Use Legit Checker for "{activeSearchTerm}"</span>
                 </button>
               )}
 

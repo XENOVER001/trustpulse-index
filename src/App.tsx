@@ -618,11 +618,11 @@ export default function App() {
         {/* PILL TAB CONTROLS */}
         <div className="flex overflow-x-auto pb-1 gap-1.5 border-b border-zinc-200 dark:border-zinc-800 scrollbar-none">
           {[
-            { id: "search", label: "🔍 Audit Registry", icon: Search },
-            { id: "inspector", label: "🕵️ Legitimacy Inspector", icon: ShieldAlert },
-            { id: "dashboard", label: "📊 Analytics & Trends", icon: TrendingUp },
-            { id: "submit", label: "✍️ Log Dispute", icon: PlusCircle },
-            { id: "guidelines", label: "🛡️ Compliance Principles", icon: Shield }
+            { id: "search", label: "🔍 Check Safety", icon: Search },
+            { id: "inspector", label: "🕵️ Legit Checker", icon: ShieldAlert },
+            { id: "dashboard", label: "📊 Reports", icon: TrendingUp },
+            { id: "submit", label: "✍️ File Dispute", icon: PlusCircle },
+            { id: "guidelines", label: "🛡️ Our Rules", icon: Shield }
           ].map((tab) => (
             <button
               key={tab.id}

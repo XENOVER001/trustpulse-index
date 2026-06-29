@@ -98,19 +98,19 @@ export function analyzeHandlePattern(handle: string): AuditResult {
   const trailingDigitsRegex = /^[a-z]+[0-9]{0,2}$/;
   if (trailingDigitsRegex.test(clean) && clean.length >= 6 && clean.length <= 15) {
     score -= 2;
-    greenFlags.push("Matches standard human-like letter-to-number distribution pattern");
+    greenFlags.push("Username looks normal (no random numbers or letters)");
   }
 
   // Rule 10: Positive signal - Natural vowel readable structure
   if (clean.length >= 5 && vowelRatio >= 0.25 && vowelRatio <= 0.5 && !/\d/.test(clean)) {
     score -= 2;
-    greenFlags.push("Natural linguistic vowel-to-consonant composition with no digits");
+    greenFlags.push("Username looks readable and natural (has balanced vowels and consonants)");
   }
 
   // Rule 11: Positive signal - Absolute absence of any risky spam/crypto keywords
   if (matchedSpam.length === 0 && matchedCrypto.length === 0) {
     score -= 1;
-    greenFlags.push("Free of high-risk keywords or platform support terminology");
+    greenFlags.push("No suspicious keywords (doesn't use fake customer support terms)");
   }
 
   // Final Output mapping
@@ -165,33 +165,33 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
   const questionsList = [
     {
       id: "unsolicited",
-      label: "Did this account send you an unsolicited direct message first?",
+      label: "Did they message you first without permission?",
       weight: 3,
-      description: "Scammers actively slide into DMs to pitch 'exclusive opportunities' or support help.",
+      description: "Scammers often slide into your DMs offering \"exclusive deals\" or fake support help.",
     },
     {
       id: "cryptoPay",
-      label: "Do they request payment via Crypto, Gift Cards, or P2P Apps (Zelle/Venmo)?",
+      label: "Do they ask for crypto, gift cards, or p2p apps?",
       weight: 4,
-      description: "Irreversible transaction methods are massive indicators of fraudulent sales.",
+      description: "Asking for non refundable payments like bitcoin, gift cards, zelle, or venmo is a major red flag.",
     },
     {
       id: "guarantees",
-      label: "Are they promising guaranteed daily gains or high returns with zero risk?",
+      label: "Do they promise guaranteed profits or zero risk?",
       weight: 4,
-      description: "Any claims of 'risk-free profit multiplication' are mathematically impossible and deceptive.",
+      description: "Claims of making \"easy, risk-free money\" are always fake and deceptive.",
     },
     {
       id: "lowEngagement",
-      label: "Does the profile have high followers but almost zero comments/likes?",
+      label: "Does the profile have lots of followers but no likes or comments?",
       weight: 2,
-      description: "Inflated follower numbers with non-existent engagement means they purchased bot accounts.",
+      description: "A high follower count with zero engagement usually means they bought fake bots accounts.",
     },
     {
       id: "recoveryFee",
-      label: "Are they claiming to recover accounts, lost funds, or solve issues for a fee?",
+      label: "Do they claim they can recover lost funds or hack accounts for a fee?",
       weight: 3,
-      description: "Recovery scammers claim they can bypass official platforms or hack accounts if paid upfront.",
+      description: "'Recovery scammers' promise to get your money back if you pay them an upfront fee.",
     },
   ];
 
@@ -269,7 +269,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
             <h1 className={`text-xl font-extrabold tracking-tight ${
               theme === "dark" ? "text-zinc-50" : "text-zinc-950"
             }`}>
-              Linguistic & Pattern Legitimacy Auditor
+              Legit Checker
             </h1>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono tracking-widest uppercase font-bold mt-0.5">
               Instant Dynamic Diagnostic Tool
@@ -293,7 +293,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
             <label className={`text-xs font-black uppercase tracking-wider block ${
               theme === "dark" ? "text-zinc-400" : "text-zinc-600"
             }`}>
-              1. Input Target Handle or Account Name
+              ENTER ACCOUNT USERNAME OR HANDLE
             </label>
             <div className="relative">
               <span className="absolute left-4 top-3 text-zinc-400 font-bold font-mono">@</span>
@@ -320,7 +320,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
             <label className={`text-xs font-black uppercase tracking-wider block ${
               theme === "dark" ? "text-zinc-400" : "text-zinc-600"
             }`}>
-              2. Select Observed Interactive Signals
+              CHECK ANY WARNING SIGNS THAT APPLY
             </label>
             
             <div className="space-y-3.5">
@@ -368,7 +368,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Run Audit Diagnostic</span>
+                  <span>Start safety check</span>
                 </>
               )}
             </button>
@@ -381,7 +381,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
                   : "border-zinc-200 bg-zinc-50 text-zinc-600 hover:text-zinc-900"
               }`}
             >
-              Reset
+              clear all
             </button>
           </div>
         </form>
@@ -424,12 +424,12 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
                   <span className={`text-[10px] block font-black uppercase tracking-wider ${
                     result.rating === "scam" ? "text-rose-500" : result.rating === "suspicious" ? "text-amber-500" : "text-emerald-500"
                   }`}>
-                    HEURISTICS ESTIMATE
+                    RISK ASSESSMENT
                   </span>
                   <h3 className={`text-xl font-extrabold capitalize ${
                     theme === "dark" ? "text-zinc-50" : "text-zinc-950"
                   }`}>
-                    {result.rating === "likely legit" ? "Likely Legit" : result.rating}
+                    status: {result.rating === "likely legit" ? "likely legit" : result.rating}
                   </h3>
                 </div>
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
@@ -448,7 +448,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
               {/* Confidence Meter */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-zinc-500 font-bold">Analysis Confidence</span>
+                  <span className="text-zinc-500 font-bold">confidence level</span>
                   <span className={`font-mono font-extrabold ${
                     result.rating === "scam" ? "text-rose-500" : result.rating === "suspicious" ? "text-amber-500" : "text-emerald-500"
                   }`}>{result.confidence}%</span>
@@ -465,14 +465,14 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
 
               {/* Score Value */}
               <div className="flex items-center justify-between text-xs font-mono bg-zinc-100/50 dark:bg-zinc-950/40 p-2.5 rounded-lg border border-zinc-200/50 dark:border-zinc-800/50">
-                <span className="text-zinc-500">Pattern Index Score:</span>
+                <span className="text-zinc-500">risk score:</span>
                 <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{result.score} pts</span>
               </div>
 
               {/* Red Flags & Signals matched */}
               {result.redFlags.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Red Flag Signals Detected</span>
+                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Warning Signs Found</span>
                   <ul className="space-y-1">
                     {result.redFlags.map((flag, idx) => (
                       <li key={idx} className="text-xs text-rose-600 dark:text-rose-400 font-semibold flex items-start gap-1.5 leading-relaxed">
@@ -487,7 +487,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
               {/* Green Flags matched */}
               {result.greenFlags.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Positive Structural Signals</span>
+                  <span className="text-[10px] text-zinc-500 block font-black uppercase card-header">Good Signs Found</span>
                   <ul className="space-y-1">
                     {result.greenFlags.map((flag, idx) => (
                       <li key={idx} className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-start gap-1.5 leading-relaxed">
@@ -503,7 +503,7 @@ export default function LegitimacyInspector({ theme, prefilledHandle }: Legitima
               <div className="text-[10px] text-zinc-400/80 dark:text-zinc-500 leading-relaxed border-t border-zinc-200/50 dark:border-zinc-800/50 pt-3 flex gap-1.5">
                 <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                 <p>
-                  <strong>Notice:</strong> This is a local rule-based heuristic indicator. Results represent high or low possibilities depending on the username style and transaction questions provided. This is not a 100% guarantee. Always verify off-platform identities before executing payments.
+                  <strong>DISCLAIMER:</strong> This tool scans for common scam patterns to give an estimate. It is not a 100% guarantee. Always verify a user's identity before sending any money.
                 </p>
               </div>
             </div>
